@@ -1,0 +1,19 @@
+{
+  "name": "server-homozetas",
+  "version": "1.0.0",
+  "description": "Servidor en NodeJS para el análisis del cultivo de homozetas",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pankecho/Homozetas.git"
+  },
+  "author": "Equipo Como Sea",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Pankecho/Homozetas/issues"
+  },
+  "homepage": "https://github.com/Pankecho/Homozetas#readme"
+}
