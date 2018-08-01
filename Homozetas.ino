@@ -5,19 +5,19 @@
 #define DHTPIN 7
 #define DHTTYPE DHT11
 
-const unsigned long TIEMPO_RIEGO_ACTIVO = 5000;
-const unsigned long TIEMPO_RIEGO_ESPERA = 10000;
+unsigned long TIEMPO_RIEGO_ACTIVO = 5000;
+unsigned long TIEMPO_RIEGO_ESPERA = 10000;
 unsigned long tiempoRiegoActual = 0;
 
-const unsigned long TIEMPO_FOCO_ACTIVO = 4000;
-const unsigned long TIEMPO_FOCO_ESPERA = 10000;
+unsigned long TIEMPO_FOCO_ACTIVO = 4000;
+unsigned long TIEMPO_FOCO_ESPERA = 10000;
 unsigned long tiempoFocoActual = 0;
 
-const byte TEMPERATURA_MINIMA = 24;
-const byte TEMPERATURA_MAXIMA = 28;
+byte TEMPERATURA_MINIMA = 24;
+byte TEMPERATURA_MAXIMA = 28;
 
-const byte HUMEDAD_MINIMA = 80;
-const byte HUMEDAD_MAXIMA = 85;
+byte HUMEDAD_MINIMA = 80;
+byte HUMEDAD_MAXIMA = 85;
 
 const byte BOTON_CALEFACCION = 3;
 const byte BOTON_GOTEO = 4;
@@ -30,6 +30,8 @@ const byte RELAY_GOTEO = 11;
 const byte RELAY_FOCO = 8;
 const byte RELAY_RIEGO = 9;
 
+const unsigned lond DIA = 86400000;
+
 byte temperaturaActual = 0;
 byte humedadActual = 0;
 
@@ -38,6 +40,13 @@ bool estadoCalefaccion = false;
 bool estadoGoteo = false;
 bool estadoFoco = false;
 bool estadoRiego = false;
+
+byte nuevaHumedadMinima = 255;
+byte nuevaHumedadMaxima = 255;
+byte nuevaTemperaturaMinima = 255;
+byte nuevaTemperaturaMaxima = 255;
+unsigned long nuevoFoco = 0;
+unsigned long nuevoRiego = 0;
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -61,6 +70,13 @@ void loop() {
       // Hubo un error al tomar la lectura, problema del sensor
       Serial.println("ERROR AL LEER DEL SENSOR, POR FAVOR, VERIFIQUE");
     }
+    Serial.println("TEMPERATURA " + String(temperaturaActual) + " " + String(TEMPERATURA_MINIMA) + " " + String(TEMPERATURA_MAXIMA));
+    Serial.println("HUMEDAD " + String(humedadActual) + " " + String(HUMEDAD_MINIMA) + " " + String(HUMEDAD_MAXIMA));
+    Serial.println("GOTEO " + String(estadoGoteo));
+    Serial.println("CALEFACCION " + String(estadoCalefaccion));
+    Serial.println("RIEGO " + String(estadoRiego));
+    Serial.println("FOCO " + String(estadoFoco));
+
     if (temperaturaActual < TEMPERATURA_MINIMA || humedadActual >= HUMEDAD_MAXIMA) {
       // Se enciende calefacción
       estadoGoteo = false;
@@ -75,6 +91,8 @@ void loop() {
     }
     digitalWrite(RELAY_CALEFACCION, (estadoCalefaccion) ? HIGH : LOW);
     digitalWrite(RELAY_GOTEO, (estadoGoteo) ? HIGH : LOW);
+
+    // SI ESTÁ PRENDIDO EL RIEGO
     if (estadoRiego) {
       if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ACTIVO) {
         estadoRiego = false;
@@ -88,6 +106,8 @@ void loop() {
         digitalWrite(RELAY_RIEGO, HIGH);
       }
     }
+    
+    // SI ESTÁ PRENDIDO O APAGADO EL FOCO
     if (estadoFoco) {
       if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ACTIVO) {
         estadoFoco = false;
@@ -101,6 +121,7 @@ void loop() {
         digitalWrite(RELAY_FOCO, HIGH);
       }
     }
+    
     // BOTONES
     if (digitalRead(BOTON_CALEFACCION)) {
       delay(150);
@@ -121,6 +142,7 @@ void loop() {
       tiempoRiegoActual = tiempo;
     }
 
+    // LEE LOS EVENTOS DEL SERIAL ENVIADOS DESDE EL SERVIDOR PARA GUARDAR NUEVOS VALORES O 
     if (Serial.available() != 0) {
       String s = Serial.readString();
       if (s.equals("CALEFACCION")) {
@@ -133,6 +155,67 @@ void loop() {
       } else if (s.equals("RIEGO")) {
         estadoRiego = !estadoRiego;
         tiempoRiegoActual = tiempo;
+      } else {
+        byte inicio = s.indexOf(" ");
+        byte fin = s.lastIndexOf(" ");
+        if (s.startsWith("RIEGO")) {
+          nuevoRiego = s.substring(inicio, fin).toInt();
+          String intervalo = s.substring(fin);
+          switch (intervalo.charAt(intervalo.length() - 1)) {
+            case 'H':
+              nuevoRiego *= 36000000;
+              break;
+            case 'M':
+              nuevoRiego *= 60000;
+              break;
+            case 'S':
+              nuevoRiego *= 1000;
+              break;
+          }
+        } else if (s.startsWith("TEMPERATURA")) {
+          nuevaTemperaturaMinima = s.substring(inicio, fin).toInt();
+          nuevaTemperaturaMaxima = s.substring(fin).toInt();
+        } else if (s.startsWith("HUMEDAD")) {
+          nuevaHumedadMinima = s.substring(inicio, fin).toInt();
+          nuevaHumedadMaxima = s.substring(fin).toInt();
+        } else if (s.startsWith("FOCO")) {
+          nuevoFoco = s.substring(inicio, fin).toInt();
+          String intervalo = s.substring(fin);
+          switch (intervalo.charAt(intervalo.length() - 1)) {
+            case 'H':
+              nuevoFoco *= 36000000;
+              break;
+            case 'M':
+              nuevoFoco *= 60000;
+              break;
+            case 'S':
+              nuevoFoco *= 1000;
+              break;
+          }
+        }
+      }
+    }
+    // RESET AL DIA SIGUIENTE SI SE HICIERON CAMBIOS EN LOS TIEMPOS, TEMPERATURA O HUMEDAD
+    if (tiempo % DIA == 0) {
+      if (nuevoRiego != 0) {
+        TIEMPO_RIEGO_ACTIVO = nuevoRiego;
+        TIEMPO_RIEGO_ESPERA = DIA - TIEMPO_RIEGO_ACTIVO;
+        nuevoRiego = 0;
+      }
+      if (nuevoFoco != 0) {
+        TIEMPO_FOCO_ACTIVO = nuevoFoco;
+        TIEMPO_FOCO_ESPERA = DIA - TIEMPO_FOCO_ACTIVO;
+        nuevoFoco = 0;
+      }
+      if (nuevaTemperaturaMinima != 255 && nuevaTemperaturaMinima != 255) {
+        TEMPERATURA_MINIMA = nuevaTemperaturaMinima;
+        TEMPERATURA_MAXIMA = nuevaTemperaturaMaxima;
+        nuevaTemperaturaMinima = nuevaTemperaturaMaxima = 255;
+      }
+      if (nuevaHumedadMinima != 255 && nuevaHumedadMinima != 255) {
+        HUMEDAD_MINIMA = nuevaHumedadMinima;
+        HUMEDAD_MAXIMA = nuevaHumedadMaxima;
+        nuevaHumedadMinima = nuevaHumedadMaxima = 255;
       }
     }
   } else {

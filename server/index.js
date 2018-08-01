@@ -13,7 +13,7 @@ io.on('connect', socket =>{
 	console.log("Se conectó un nuevo socket");
 })
 
-app.use(Express.static(__dirname + "/public/"));
+app.use(Express.static(__dirname + "/public"));
 app.use(Cors());
 app.use(BodyParser.json());
 
@@ -36,6 +36,30 @@ app.post('/goteo',(req, res, next) =>{
 app.post('/foco',(req, res, next) =>{
     mySerial.write('FOCO');
     res.status(200).end();
+});
+app.post('/configuracion',(req, res, next)=>{
+	const peticion = req.body;
+	if(parseInt(peticion.tiempoRiego)){
+		const tiempo = parseInt(peticion.tiempoRiego);
+		const intervalo = peticion.intervalo;
+		mySerial.write(`RIEGO: ${tiempo} ${intervalo}`);
+	}
+	if(parseInt(peticion.tiempoFoco)){
+		const tiempo = parseInt(peticion.tiempoFoco);
+		const intervalo = peticion.intervalo;
+		mySerial.write(`FOCO: ${tiempo} ${intervalo}`);
+	}
+	if(parseInt(peticion.temperaturaMinima) && parseInt(peticion.temperaturaMinima)){
+		const min = parseInt(peticion.temperaturaMinima);
+		const max = parseInt(peticion.temperaturaMinima);
+		mySerial.write(`TEMPERATURA: ${min} ${max}`);
+	}
+	if(parseInt(peticion.humedadMinima) && parseInt(peticion.humedadMinima)){
+		const min = parseInt(peticion.humedadMinima);
+		const max = parseInt(peticion.humedadMinima);
+		mySerial.write(`HUMEDAD: ${min} ${max}`);
+	}
+	res.status(200).end();
 });
 
 const Readline = SerialPort.parsers.Readline;
