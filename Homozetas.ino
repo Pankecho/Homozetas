@@ -76,29 +76,63 @@ void loop() {
     digitalWrite(RELAY_CALEFACCION, (estadoCalefaccion) ? HIGH : LOW);
     digitalWrite(RELAY_GOTEO, (estadoGoteo) ? HIGH : LOW);
     if (estadoRiego) {
-      if(tiempo - tiempoRiegoActual > TIEMPO_RIEGO_ACTIVO){
+      if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ACTIVO) {
         estadoRiego = false;
         tiempoRiegoActual = tiempo;
         digitalWrite(RELAY_RIEGO, LOW);
       }
     } else {
-      if (tiempo - tiempoRiegoActual > TIEMPO_RIEGO_ESPERA) {
+      if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ESPERA) {
         estadoRiego = true;
         tiempoRiegoActual = tiempo;
         digitalWrite(RELAY_RIEGO, HIGH);
       }
     }
     if (estadoFoco) {
-      if(tiempo - tiempoFocoActual > TIEMPO_FOCO_ACTIVO){
+      if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ACTIVO) {
         estadoFoco = false;
         tiempoFocoActual = tiempo;
         digitalWrite(RELAY_FOCO, LOW);
       }
     } else {
-      if (tiempo - tiempoFocoActual > TIEMPO_FOCO_ESPERA) {
+      if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ESPERA) {
         estadoFoco = true;
         tiempoFocoActual = tiempo;
         digitalWrite(RELAY_FOCO, HIGH);
+      }
+    }
+    // BOTONES
+    if (digitalRead(BOTON_CALEFACCION)) {
+      delay(150);
+      estadoCalefaccion = !estadoCalefaccion;
+    }
+    if (digitalRead(BOTON_GOTEO)) {
+      delay(150);
+      estadoGoteo = !estadoGoteo;
+    }
+    if (digitalRead(BOTON_FOCO)) {
+      delay(150);
+      estadoFoco = !estadoFoco;
+      tiempoFocoActual = tiempo;
+    }
+    if (digitalRead(BOTON_RIEGO)) {
+      delay(150);
+      estadoRiego = !estadoRiego;
+      tiempoRiegoActual = tiempo;
+    }
+
+    if (Serial.available() != 0) {
+      String s = Serial.readString();
+      if (s.equals("CALEFACCION")) {
+        estadoCalefaccion = !estadoCalefaccion;
+      } else if (s.equals("GOTEO")) {
+        estadoGoteo = !estadoGoteo;
+      } else if (s.equals("FOCO")) {
+        estadoFoco = !estadoFoco;
+        tiempoFocoActual = tiempo;
+      } else if (s.equals("RIEGO")) {
+        estadoRiego = !estadoRiego;
+        tiempoRiegoActual = tiempo;
       }
     }
   } else {

@@ -15,5 +15,12 @@
   "bugs": {
     "url": "https://github.com/Pankecho/Homozetas/issues"
   },
-  "homepage": "https://github.com/Pankecho/Homozetas#readme"
+  "homepage": "https://github.com/Pankecho/Homozetas#readme",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "serialport": "^6.2.2",
+    "socket.io": "^2.1.1"
+  }
 }
