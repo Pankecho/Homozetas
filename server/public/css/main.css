@@ -1,0 +1,42 @@
+*{
+	font-family: 'Montserrat';
+}
+
+nav{
+	background-color: black;
+}
+
+nav a{
+	color: white;
+}
+
+body a:hover{
+	color: lightgray;
+}
+
+.navbar-toggler > span{
+	display: block;
+	width: 1em;
+	border-bottom: 1px solid white;
+	transition: 0.5s;
+}
+
+.dos{
+	padding-bottom: 0.5em;
+}
+
+.burger .uno{
+	transform: translate(0em, 0.3em) rotate(45deg);
+}
+.burger .dos{
+	transform: translate(-0.15em, -0.2em) rotate(-45deg);
+}
+
+.nav-item:hover{
+	border-bottom: 0.1px solid white;
+}
+
+#temperatura{
+	height: 300px;
+	position: relative;
+}

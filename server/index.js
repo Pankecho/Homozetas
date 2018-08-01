@@ -6,16 +6,17 @@ const Cors = require('cors');
 const BodyParser = require('body-parser');
 
 const app = Express();
+
+app.use(Express.static(__dirname + "/public"));
+app.use(Cors());
+app.use(BodyParser.json());
+
 const server = Http.createServer(app);
 const io = SocketIO.listen(server);
 
 io.on('connect', socket =>{
 	console.log("Se conectó un nuevo socket");
-})
-
-app.use(Express.static(__dirname + "/public"));
-app.use(Cors());
-app.use(BodyParser.json());
+});
 
 app.get('/',(req, res, next)=>{
 	res.sendFile(__dirname + "/index.html");
@@ -60,6 +61,10 @@ app.post('/configuracion',(req, res, next)=>{
 		mySerial.write(`HUMEDAD: ${min} ${max}`);
 	}
 	res.status(200).end();
+});
+
+app.all('*', function (req, res) {
+	res.status(404).end();
 });
 
 const Readline = SerialPort.parsers.Readline;

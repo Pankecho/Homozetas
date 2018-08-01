@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Homozetas</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <header>
+		<nav class="navbar fixed-top navbar-expand-md">
+		  	<button class="navbar-toggler boton toggle" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" style="border: 0;" onclick="lol(this)">
+                <span class="uno"></span>
+                <span class="dos"></span>
+		  	</button>
+			<div class="collapse navbar-collapse" id="navbar">
+				<ul class="navbar-nav ml-auto mt-2 mt-lg-2">
+				  <li class="nav-item">
+				    <a class="nav-link" href="/">Inicio</a>
+				  </li>
+				  <li class="nav-item">
+				  	<a href="/configuracion" class="nav-link">Configuracion</a>
+				  </li>
+				</ul>
+			</div>
+		</nav>
+	</header>
+    <script src="js/jquery.slim.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+        const lol = (x)=>{
+            x.classList.toggle('burger');
+        };
+    </script>
+</body>
+</html>

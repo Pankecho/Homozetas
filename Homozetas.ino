@@ -11,13 +11,26 @@ const byte BOTON_FOCO = 22;
 const byte BOTON_RIEGO = 23;
 const byte BOTON_INICIO = 24;
 
-const byte RELAY_CALEFACCION = 10;
-const byte RELAY_GOTEO = 11;
-const byte RELAY_FOCO = 8;
-const byte RELAY_RIEGO = 9;
+const byte RELAY_CALEFACCION = 6;
+const byte RELAY_GOTEO = 5;
+const byte RELAY_FOCO = 4;
+const byte RELAY_RIEGO = 3;
+
+const byte RS = 22;
+const byte ENABLE = 24;
+const byte D4 = 30;
+const byte D5 = 32;
+const byte D6 = 34;
+const byte D7 = 36;
 
 const unsigned long DIA = 86400000;
 const unsigned long PRESIONADO = 200;
+
+const String TEMPERATURA = String("Temp: ");
+const String CENTIGRADOS = String("C");
+const String HUMEDAD = String("Hum: ");
+const String PORCENTAJE = String("%");
+
 
 unsigned long TIEMPO_RIEGO_ACTIVO = 5000;
 unsigned long TIEMPO_RIEGO_ESPERA = 10000;
@@ -33,10 +46,13 @@ unsigned long BOTON_FOCO_TIEMPO = 0;
 unsigned long BOTON_RIEGO_TIEMPO = 0;
 unsigned long BOTON_INICIO_TIEMPO = 0;
 
+unsigned long TIEMPO_DISPLAY_ESPERA = 3000;
+unsigned long TIEMPO_DISPLAY_ACTUAL = 0;
+
 byte TEMPERATURA_MINIMA = 24;
 byte TEMPERATURA_MAXIMA = 28;
 
-byte HUMEDAD_MINIMA = 80;
+byte HUMEDAD_MINIMA = 40;
 byte HUMEDAD_MAXIMA = 85;
 
 byte temperaturaActual = 0;
@@ -56,10 +72,12 @@ unsigned long nuevoFoco = 0;
 unsigned long nuevoRiego = 0;
 
 DHT dht(DHTPIN, DHTTYPE);
+LiquidCrystal lcd(RS, ENABLE, D4, D5, D6, D7);
 
 void setup() {
   // put your setup code here, to run once:
   dht.begin();
+  lcd.begin(16, 2);
   Serial.begin(BAUDIOS);
   pinMode(BOTON_CALEFACCION, INPUT);
   pinMode(BOTON_GOTEO, INPUT);
@@ -71,6 +89,10 @@ void setup() {
   pinMode(RELAY_GOTEO, OUTPUT);
   pinMode(RELAY_FOCO, OUTPUT);
   pinMode(RELAY_RIEGO, OUTPUT);
+  digitalWrite(RELAY_CALEFACCION, HIGH);
+  digitalWrite(RELAY_GOTEO, HIGH);
+  digitalWrite(RELAY_FOCO, HIGH);
+  digitalWrite(RELAY_RIEGO, HIGH);
 }
 
 void loop() {
@@ -83,7 +105,10 @@ void loop() {
       // Hubo un error al tomar la lectura, problema del sensor
       Serial.println("ERROR AL LEER DEL SENSOR, POR FAVOR, VERIFIQUE");
     }
+    lcd.setCursor(0,0);
+    lcd.print(TEMPERATURA + String(temperaturaActual) + " " + HUMEDAD + String(humedadActual));
     printData();
+    
     checaTemperaturaHumedad();
     riego(tiempo);
     foco(tiempo);
@@ -120,8 +145,8 @@ void checaTemperaturaHumedad() {
     estadoCalefaccion = false;
     estadoGoteo = false;
   }
-  digitalWrite(RELAY_CALEFACCION, (estadoCalefaccion) ? HIGH : LOW);
-  digitalWrite(RELAY_GOTEO, (estadoGoteo) ? HIGH : LOW);
+  digitalWrite(RELAY_CALEFACCION, (estadoCalefaccion) ? LOW : HIGH);
+  digitalWrite(RELAY_GOTEO, (estadoGoteo) ? LOW : HIGH);
 }
 
 void riego(unsigned long tiempo) {
@@ -130,13 +155,13 @@ void riego(unsigned long tiempo) {
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ACTIVO) {
       estadoRiego = false;
       tiempoRiegoActual = tiempo;
-      digitalWrite(RELAY_RIEGO, LOW);
+      digitalWrite(RELAY_RIEGO, HIGH);
     }
   } else {
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ESPERA) {
       estadoRiego = true;
       tiempoRiegoActual = tiempo;
-      digitalWrite(RELAY_RIEGO, HIGH);
+      digitalWrite(RELAY_RIEGO, LOW);
     }
   }
 }
@@ -147,13 +172,13 @@ void foco(unsigned long tiempo) {
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ACTIVO) {
       estadoFoco = false;
       tiempoFocoActual = tiempo;
-      digitalWrite(RELAY_FOCO, LOW);
+      digitalWrite(RELAY_FOCO, HIGH);
     }
   } else {
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ESPERA) {
       estadoFoco = true;
       tiempoFocoActual = tiempo;
-      digitalWrite(RELAY_FOCO, HIGH);
+      digitalWrite(RELAY_FOCO, LOW);
     }
   }
 }
