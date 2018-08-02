@@ -13,8 +13,8 @@ const byte BOTON_INICIO = 24;
 
 const byte RELAY_CALEFACCION = 8;
 const byte RELAY_GOTEO = 9;
-const byte RELAY_FOCO = 10;
-const byte RELAY_RIEGO = 11;
+const byte RELAY_FOCO = 11;
+const byte RELAY_RIEGO = 13;
 
 const byte RS = 22;
 const byte ENABLE = 24;
@@ -26,9 +26,9 @@ const byte D7 = 36;
 const unsigned long DIA = 86400000;
 const unsigned long PRESIONADO = 200;
 
-const String TEMPERATURA = String("T: ");
-const String CENTIGRADOS = String("C - ");
-const String HUMEDAD = String("H: ");
+const String TEMPERATURA = String("Temp: ");
+const String CENTIGRADOS = String("C");
+const String HUMEDAD = String("Hum: ");
 const String PORCENTAJE = String("%");
 
 
@@ -50,7 +50,7 @@ unsigned long TIEMPO_DISPLAY_ESPERA = 3000;
 unsigned long TIEMPO_DISPLAY_ACTUAL = 0;
 
 byte TEMPERATURA_MINIMA = 24;
-byte TEMPERATURA_MAXIMA = 28;
+byte TEMPERATURA_MAXIMA = 26;
 
 byte HUMEDAD_MINIMA = 40;
 byte HUMEDAD_MAXIMA = 85;
@@ -105,11 +105,11 @@ void loop() {
       // Hubo un error al tomar la lectura, problema del sensor
       Serial.println("ERROR AL LEER DEL SENSOR, POR FAVOR, VERIFIQUE");
     }
-    printData(tiempo);
-    checkButtons(tiempo);
+    printData();
     checaTemperaturaHumedad();
     riego(tiempo);
     foco(tiempo);
+    checkButtons(tiempo);
     serialEvents(tiempo);
     reset(tiempo);
   } else {
@@ -120,18 +120,13 @@ void loop() {
   }
 }
 
-void printData(unsigned long tiempo) {
+void printData() {
   Serial.println("TEMPERATURA " + String(temperaturaActual) + " " + String(TEMPERATURA_MINIMA) + " " + String(TEMPERATURA_MAXIMA));
   Serial.println("HUMEDAD " + String(humedadActual) + " " + String(HUMEDAD_MINIMA) + " " + String(HUMEDAD_MAXIMA));
   Serial.println("GOTEO " + String(estadoGoteo));
   Serial.println("CALEFACCION " + String(estadoCalefaccion));
   Serial.println("RIEGO " + String(estadoRiego));
   Serial.println("FOCO " + String(estadoFoco));
-  if (tiempo - TIEMPO_DISPLAY_ACTUAL >=  TIEMPO_DISPLAY_ESPERA) {
-     TIEMPO_DISPLAY_ACTUAL =  tiempo;
-     lcd.setCursor(0,0);
-     lcd.print(TEMPERATURA + String(temperaturaActual) + CENTIGRADOS + HUMEDAD + String(humedadActual) + PORCENTAJE);
-  }
 }
 
 void checaTemperaturaHumedad() {
@@ -139,12 +134,10 @@ void checaTemperaturaHumedad() {
     // Se enciende calefacción
     estadoGoteo = false;
     estadoCalefaccion = true;
-    lcd.print("CALEFACCION ENCENDIDA");
   } else if (temperaturaActual >= TEMPERATURA_MAXIMA || humedadActual < HUMEDAD_MINIMA) {
     // Apaga la calefacción y enciende el Goteo
     estadoCalefaccion = false;
     estadoGoteo = true;
-    lcd.print("GOTEO ENCENDIDO");
   } else {
     estadoCalefaccion = false;
     estadoGoteo = false;
@@ -156,18 +149,16 @@ void checaTemperaturaHumedad() {
 void riego(unsigned long tiempo) {
   // SI ESTÁ PRENDIDO EL RIEGO
   if (estadoRiego) {
-    digitalWrite(RELAY_RIEGO, LOW);
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ACTIVO) {
       estadoRiego = false;
       tiempoRiegoActual = tiempo;
-      lcd.print("RIEGO APAGADO");
+      digitalWrite(RELAY_RIEGO, HIGH);
     }
   } else {
-    digitalWrite(RELAY_RIEGO, HIGH);
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ESPERA) {
       estadoRiego = true;
       tiempoRiegoActual = tiempo;
-      lcd.print("RIEGO ENCENDIDO");
+      digitalWrite(RELAY_RIEGO, LOW);
     }
   }
 }
@@ -175,18 +166,16 @@ void riego(unsigned long tiempo) {
 void foco(unsigned long tiempo) {
   // SI ESTÁ PRENDIDO O APAGADO EL FOCO
   if (estadoFoco) {
-    digitalWrite(RELAY_FOCO, LOW);
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ACTIVO) {
       estadoFoco = false;
       tiempoFocoActual = tiempo;
-      lcd.print("FOCO APAGADO");
+      digitalWrite(RELAY_FOCO, HIGH);
     }
   } else {
-    digitalWrite(RELAY_FOCO, HIGH);
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ESPERA) {
       estadoFoco = true;
       tiempoFocoActual = tiempo;
-      lcd.print("FOCO PRENDIDO");
+      digitalWrite(RELAY_FOCO, LOW);
     }
   }
 }
@@ -204,11 +193,13 @@ void checkButtons(unsigned long tiempo) {
     estadoFoco = !estadoFoco;
     tiempoFocoActual = tiempo;
     BOTON_FOCO_TIEMPO = tiempo;
+    digitalWrite(RELAY_FOCO, (estadoFoco) ? LOW : HIGH);
   }
   if (digitalRead(BOTON_RIEGO) && (tiempo - BOTON_RIEGO_TIEMPO) >= PRESIONADO) {
     estadoRiego = !estadoRiego;
     tiempoRiegoActual = tiempo;
     BOTON_RIEGO_TIEMPO = tiempo;
+    digitalWrite(RELAY_RIEGO, (estadoRiego) ? LOW : HIGH);
   }
 }
 
