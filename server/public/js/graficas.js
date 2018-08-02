@@ -1,24 +1,61 @@
-const opts = {
-    angle: -0.2, // The span of the gauge arc
-    lineWidth: 0.2, // The line thickness
-    radiusScale: 1, // Relative radius
+let minTemp = 26, maxTemp = 28, tempActual = 0;
+let minHum = 80, maxHum = 85, humActual = 0;
+const rojo = '#F75F45';
+const verde = '#87C15A';
+const azul = '#59C5DB';
+
+let optsT = {
+    angle: -0.25,
+    lineWidth: 0.2,
+    radiusScale:0.9,
     pointer: {
-      length: 0.6, // // Relative to gauge radius
-      strokeWidth: 0.035, // The thickness
-      color: '#000000' // Fill color
+      length: 0.6,
+      strokeWidth: 0.05,
+      color: '#000000'
+    },staticLabels: {
+        font: "1em Montserrat",
+        labels: [0, minTemp, maxTemp, 100],
+        fractionDigits: 0
     },
-    limitMax: false,     // If false, max value increases automatically if value > maxValue
-    limitMin: false,     // If true, the min value of the gauge will be fixed
-    colorStart: '#F75F45',   // Colors
-    colorStop: '#59C5DB',    // just experiment with them
-    strokeColor: '#E0E0E0',  // to see which ones work best for you
-    generateGradient: true,
-    highDpiSupport: true,     // High resolution support
-    
+    staticZones: [
+       {strokeStyle: azul, min: 0, max: minTemp},
+       {strokeStyle: verde, min: minTemp, max: maxTemp},
+       {strokeStyle: rojo, min: maxTemp, max: 100}
+    ],
+    limitMax: false,
+    limitMin: false,
+    highDpiSupport: true
   };
-const target = document.getElementById('temperatura'); // your canvas element
-let gaugeTemperatura = new Gauge(target).setOptions(opts); // create sexy gauge!
-gaugeTemperatura.maxValue = 3000; // set max gauge value
-gaugeTemperatura.setMinValue(0);  // Prefer setter over gauge.minValue = 0
-gaugeTemperatura.animationSpeed = 32; // set animation speed (32 is default value)
-gaugeTemperatura.set(875); // set actual value
+let targetT = document.getElementById('temperatura'); // your canvas element
+let gaugeT = new Gauge(targetT).setOptions(optsT); // create sexy gauge!
+gaugeT.minValue = 0;
+gaugeT.maxValue = 100;
+gaugeT.set(maxTemp);
+
+let optsH = {
+    angle: -0.25,
+    lineWidth: 0.2,
+    radiusScale:0.9,
+    pointer: {
+      length: 0.6,
+      strokeWidth: 0.05,
+      color: '#000000'
+    },staticLabels: {
+        font: "1em Montserrat",
+        labels: [0, minHum, maxHum, 100],
+        fractionDigits: 0
+    },
+    staticZones: [
+       {strokeStyle: rojo, min: 0, max: minHum},
+       {strokeStyle: verde, min: minHum, max: maxHum},
+       {strokeStyle: azul, min: maxHum, max: 100}
+    ],
+    limitMax: false,
+    limitMin: false,
+    highDpiSupport: true
+  };
+let targetH = document.getElementById('humedad'); // your canvas element
+let gaugeH = new Gauge(targetH).setOptions(optsH); // create sexy gauge!
+gaugeH.minValue = 0;
+gaugeH.maxValue = 100;
+gaugeH.set(0);

@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <nav class="navbar static-top navbar-expand-md">
+    <nav class="navbar sticky-top navbar-expand-md">
         <button class="navbar-toggler boton toggle" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" style="border: 0;" onclick="lol(this)">
             <span class="uno"></span>
             <span class="dos"></span>
@@ -25,13 +25,28 @@
             </ul>
         </div>
     </nav>
-    <div class="container">
+    <div class="container-fluid">
         <div class="row">
-            <div class="col-md-6 col-sm-12">
+            <div class="col-md-8 text-center">
+                <h2>Temperatura</h2>
                 <canvas id="temperatura"></canvas>
-            </div>
-            <div class="col-md-6 col-sm-12">
+                <div id="temperaturaActual" class="text-center"></div>
+                <hr class="my-4">
+                <h2>Humedad</h2>
                 <canvas id="humedad"></canvas>
+                <div id="humedadActual" class="text-center"></div>
+            </div>
+            <div class="col-md-4 col-xs-12 text-right">
+                <h3>Control manual</h3>
+                <br>
+                <button type="button" class="btn" id="calefaccion" onclick="peticion(this)">Calefacción</button>
+                <button type="button" class="btn" id="goteo" onclick="peticion(this)">Goteo</button>
+                <button type="button" class="btn" id="riego" onclick="peticion(this)">Riego</button>
+                <button type="button" class="btn" id="foco" onclick="peticion(this)">Foco</button>
+                <hr class="my-2">
+                <div id="barra">
+                    <h5 style="padding-top: 2em;">Eventos</h5>
+                </div>
             </div>
         </div>
     </div>
@@ -39,10 +54,86 @@
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/gauge.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="js/graficas.js"></script>
     <script>
         const lol = (x)=>{
             x.classList.toggle('burger');
+        };
+        const socket = io();
+        const peticion = (element)=>{
+            let xhttp = new XMLHttpRequest();
+            let url = `/${element.id}`;
+            xhttp.open("POST", url, true);
+            xhttp.send();
+        };
+        socket.on('arduino:data',data=>{
+            let valor = data.value.split(" ");
+            let anterior = "";
+            switch(valor[0]){
+                case "TEMPERATURA":
+                const actual = parseInt(valor[1]);
+                const min = parseInt(valor[2]);
+                const max = parseInt(valor[3]);
+                if(minTemp != min || maxTemp != max){
+                    maxTemp = max;
+                    minTemp = min;
+                    gaugeT = new Gauge(targetT).setOptions(optsT); // create sexy gauge!
+                    gaugeT.minValue = 0;
+                    gaugeT.maxValue = 100;
+                }
+                gaugeT.set(actual);
+                document.getElementById('temperaturaActual').innerText = `${actual} ºC`;
+                break;
+                case "HUMEDAD":
+                const actualH = parseInt(valor[1]);
+                const minH = parseInt(valor[2]);
+                const maxH = parseInt(valor[3]);
+                if(minHum != minH || maxHum != maxH){
+                    maxHum = maxH;
+                    minHum = minH;
+                    gaugeH = new Gauge(targetH).setOptions(optsH); // create sexy gauge!
+                    gaugeH.minValue = 0;
+                    gaugeH.maxValue = 100;
+                }
+                gaugeH.set(actualH);
+                document.getElementById('humedadActual').innerText = `${actualH}%`;
+                break;
+                case "GOTEO":
+                const prendidoG = parseInt(valor[1]);
+                let eG = document.getElementById('goteo');
+                eG.style.backgroundColor = (prendidoG === 1) ? verde : rojo;
+                break;
+                case "CALEFACCION":
+                const prendidoC = parseInt(valor[1]);
+                let eC = document.getElementById('calefaccion');
+                eC.style.backgroundColor = (prendidoC === 1) ? verde : rojo;
+                break;
+                case "RIEGO": 
+                const prendidoR = parseInt(valor[1]);
+                let eR = document.getElementById('riego');
+                eR.style.backgroundColor = (prendidoR === 1) ? verde : rojo;
+                break;
+                case "FOCO":
+                const prendidoF = parseInt(valor[1]);
+                let eF = document.getElementById('foco');
+                eF.style.backgroundColor = (prendidoF === 1) ? verde : rojo;
+                break;
+                case "ALERTA":
+                if(data.value != anterior){
+                    let elemento = `<div class=\"alert alert-light\" role=\"alert\">${data.value.substring(data.value.indexOf(" "))}</div>`;
+                    document.getElementById('barra').innerHTML += elemento;
+                    lo();
+                    anterior = data.value;
+                }
+                break;
+            }
+        });
+
+        const lo = ()=>{
+            setTimeout(function() {
+                $(".alert").alert('close');
+            }, 2000);
         };
     </script>
 </body>

@@ -36,7 +36,37 @@ body a:hover{
 	border-bottom: 0.1px solid white;
 }
 
-#temperatura{
-	height: 300px;
-	position: relative;
+#temperatura, #humedad{
+	width: 100%;
+	height: auto;
+}
+
+#temperaturaActual, #humedadActual{
+	padding-bottom: 1em;
+}
+
+button{
+	width: 60%;
+	color: white;
+	margin-bottom: 1.5em;
+}
+
+.alert{
+	float: right;
+	width: 60%;
+}
+
+#barra{
+	overflow: hidden;
+}
+
+h4{
+	display: block;
+}
+
+@media (max-width: 575.98px) {
+	button{
+		width: 75%;
+		margin-bottom: 2em;
+	}
 }

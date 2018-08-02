@@ -10,6 +10,7 @@ const app = Express();
 app.use(Express.static(__dirname + "/public"));
 app.use(Cors());
 app.use(BodyParser.json());
+app.use(BodyParser.urlencoded({ extended: true }));
 
 const server = Http.createServer(app);
 const io = SocketIO.listen(server);
@@ -20,6 +21,9 @@ io.on('connect', socket =>{
 
 app.get('/',(req, res, next)=>{
 	res.sendFile(__dirname + "/index.html");
+});
+app.get('/configuracion',(req, res, next)=>{
+	res.sendFile(__dirname + "/configuracion.html");
 });
 
 app.post('/riego',(req, res, next) =>{
@@ -39,16 +43,17 @@ app.post('/foco',(req, res, next) =>{
     res.status(200).end();
 });
 app.post('/configuracion',(req, res, next)=>{
+	console.log(req.body);
 	const peticion = req.body;
 	if(parseInt(peticion.tiempoRiego)){
 		const tiempo = parseInt(peticion.tiempoRiego);
-		const intervalo = peticion.intervalo;
+		const intervalo = peticion.intervaloR;
 		mySerial.write(`RIEGO: ${tiempo} ${intervalo}`);
 	}
 	if(parseInt(peticion.tiempoFoco)){
 		const tiempo = parseInt(peticion.tiempoFoco);
 		const intervalo = peticion.intervalo;
-		mySerial.write(`FOCO: ${tiempo} ${intervalo}`);
+		mySerial.write(`FOCO: ${tiempo} ${intervaloF}`);
 	}
 	if(parseInt(peticion.temperaturaMinima) && parseInt(peticion.temperaturaMinima)){
 		const min = parseInt(peticion.temperaturaMinima);
@@ -79,7 +84,7 @@ mySerial.pipe(parser);
 mySerial.on('open', ()=>{
 	console.log("Puerto Serial Abierto");
 	parser.on('data', data =>{
-		console.log(data.toString());
+		//console.log(data.toString());
 		io.emit('arduino:data',{
 			value: data.toString()
 		});

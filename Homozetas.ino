@@ -49,10 +49,13 @@ unsigned long BOTON_INICIO_TIEMPO = 0;
 unsigned long TIEMPO_DISPLAY_ESPERA = 3000;
 unsigned long TIEMPO_DISPLAY_ACTUAL = 0;
 
-byte TEMPERATURA_MINIMA = 24;
-byte TEMPERATURA_MAXIMA = 26;
+unsigned long TIEMPO_SERIAL = 1000;
+unsigned long TIEMPO_SERIAL_A = 0;
 
-byte HUMEDAD_MINIMA = 40;
+byte TEMPERATURA_MINIMA = 26;
+byte TEMPERATURA_MAXIMA = 28;
+
+byte HUMEDAD_MINIMA = 80;
 byte HUMEDAD_MAXIMA = 85;
 
 byte temperaturaActual = 0;
@@ -105,7 +108,7 @@ void loop() {
       // Hubo un error al tomar la lectura, problema del sensor
       Serial.println("ERROR AL LEER DEL SENSOR, POR FAVOR, VERIFIQUE");
     }
-    printData();
+    printData(tiempo);
     checaTemperaturaHumedad();
     riego(tiempo);
     foco(tiempo);
@@ -120,22 +123,32 @@ void loop() {
   }
 }
 
-void printData() {
-  Serial.println("TEMPERATURA " + String(temperaturaActual) + " " + String(TEMPERATURA_MINIMA) + " " + String(TEMPERATURA_MAXIMA));
-  Serial.println("HUMEDAD " + String(humedadActual) + " " + String(HUMEDAD_MINIMA) + " " + String(HUMEDAD_MAXIMA));
-  Serial.println("GOTEO " + String(estadoGoteo));
-  Serial.println("CALEFACCION " + String(estadoCalefaccion));
-  Serial.println("RIEGO " + String(estadoRiego));
-  Serial.println("FOCO " + String(estadoFoco));
+void printData(unsigned long tiempo) {
+  if (tiempo - TIEMPO_SERIAL_A >= TIEMPO_SERIAL) {
+    Serial.println("TEMPERATURA " + String(temperaturaActual) + " " + String(TEMPERATURA_MINIMA) + " " + String(TEMPERATURA_MAXIMA));
+    Serial.println("HUMEDAD " + String(humedadActual) + " " + String(HUMEDAD_MINIMA) + " " + String(HUMEDAD_MAXIMA));
+    Serial.println("GOTEO " + String(estadoGoteo));
+    Serial.println("CALEFACCION " + String(estadoCalefaccion));
+    Serial.println("RIEGO " + String(estadoRiego));
+    Serial.println("FOCO " + String(estadoFoco));
+    TIEMPO_SERIAL_A = tiempo;
+  }
+
 }
 
 void checaTemperaturaHumedad() {
   if (temperaturaActual < TEMPERATURA_MINIMA || humedadActual >= HUMEDAD_MAXIMA) {
     // Se enciende calefacción
+    if(!estadoCalefaccion)
+      Serial.println("ALERTA Se enciende calefacción y apaga goteo");
+      
     estadoGoteo = false;
     estadoCalefaccion = true;
   } else if (temperaturaActual >= TEMPERATURA_MAXIMA || humedadActual < HUMEDAD_MINIMA) {
     // Apaga la calefacción y enciende el Goteo
+    if(!estadoGoteo)
+      Serial.println("ALERTA Se enciende goteo y apaga calefaccion");
+      
     estadoCalefaccion = false;
     estadoGoteo = true;
   } else {
@@ -153,12 +166,14 @@ void riego(unsigned long tiempo) {
       estadoRiego = false;
       tiempoRiegoActual = tiempo;
       digitalWrite(RELAY_RIEGO, HIGH);
+      Serial.println("ALERTA Se detiene riego");
     }
   } else {
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ESPERA) {
       estadoRiego = true;
       tiempoRiegoActual = tiempo;
       digitalWrite(RELAY_RIEGO, LOW);
+      Serial.println("ALERTA Se enciende riego");
     }
   }
 }
@@ -170,12 +185,14 @@ void foco(unsigned long tiempo) {
       estadoFoco = false;
       tiempoFocoActual = tiempo;
       digitalWrite(RELAY_FOCO, HIGH);
+      Serial.println("ALERTA Se detiene foco");
     }
   } else {
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ESPERA) {
       estadoFoco = true;
       tiempoFocoActual = tiempo;
       digitalWrite(RELAY_FOCO, LOW);
+      Serial.println("ALERTA Se enciende foco");
     }
   }
 }

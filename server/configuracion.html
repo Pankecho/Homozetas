@@ -9,31 +9,158 @@
     <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-    <header>
-		<nav class="navbar fixed-top navbar-expand-md">
-		  	<button class="navbar-toggler boton toggle" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" style="border: 0;" onclick="lol(this)">
-                <span class="uno"></span>
-                <span class="dos"></span>
-		  	</button>
-			<div class="collapse navbar-collapse" id="navbar">
-				<ul class="navbar-nav ml-auto mt-2 mt-lg-2">
-				  <li class="nav-item">
-				    <a class="nav-link" href="/">Inicio</a>
-				  </li>
-				  <li class="nav-item">
-				  	<a href="/configuracion" class="nav-link">Configuracion</a>
-				  </li>
-				</ul>
-			</div>
-		</nav>
-	</header>
+    <nav class="navbar sticky-top navbar-expand-md">
+        <button class="navbar-toggler boton toggle" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation" style="border: 0;" onclick="lol(this)">
+            <span class="uno"></span>
+            <span class="dos"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="navbar-nav ml-auto mt-2 mt-lg-2">
+            <li class="nav-item">
+                <a class="nav-link" href="/">Inicio</a>
+            </li>
+            <li class="nav-item">
+                <a href="/configuracion" class="nav-link">Configuracion</a>
+            </li>
+            </ul>
+        </div>
+    </nav>
+    <br>
+    <div class="container">
+        <h4>Configuración de parámetros del invernadero</h4>
+        <br>
+        <form class="needs-validation" novalidate>
+            <div class="form-row">
+                <div class="col-md-6 col-12">
+                    <label for="validaTiempo">Intervalo de tiempo de riego</label>
+                    <input name="tiempoRiego" type="number" class="form-control" id="validaTiempo" placeholder="Tiempo">
+                </div>
+                <div class="col-md-4 col-6">
+                    <label for="validaTipo">Unidad de tiempo</label>
+                    <select class="custom-select" id="validaTipo" name="intervalo">
+                        <option selected value="S">Segundos al dia</option>
+                        <option value="M">Minutos al dia</option>
+                        <option value="H">Horas al dia</option>
+                    </select>
+                </div>
+            </div>
+            <br>
+            <div class="form-row">
+                <div class="col-md-6 col-12">
+                    <label for="validaTiempoF">Intervalo de tiempo de foco</label>
+                    <input type="number" class="form-control" id="validaTiempoF" placeholder="Tiempo">
+                </div>
+                <div class="col-md-4 col-6">
+                    <label for="validaTipoF">Unidad de tiempo</label>
+                    <select class="custom-select" id="validaTipoF">
+                        <option selected value="S">Segundos al dia</option>
+                        <option value="M">Minutos al dia</option>
+                        <option value="H">Horas al dia</option>
+                    </select>
+                </div>
+            </div>
+            <br>
+            <div class="form-row">
+                <div class="col-md-5 col-12">
+                    <label for="validaMinT">Temperatura minima ºC</label>
+                    <input type="number" class="form-control" id="validaMinT" placeholder="Temperatura min" min="1" max="100">
+                </div>
+                <div class="col-md-5 col-12">
+                    <label for="validaMaxT">Temperatura maxima ºC</label>
+                    <input type="number" class="form-control" id="validaMaxT" placeholder="Temperatura max" min="1" max="100">
+                </div>
+            </div>
+            <br>
+            <div class="form-row">
+                <div class="col-md-5 col-12">
+                    <label for="validaMinH">Humedad minima %</label>
+                    <input type="number" class="form-control" id="validaMinH" placeholder="Humedad min" min="1" max="100">
+                </div>
+                <div class="col-md-5 col-12">
+                    <label for="validaMaxH">Humedad maxima %</label>
+                    <input type="number" class="form-control" id="validaMaxH" placeholder="Humedad max" min="1" max="100">
+                </div>
+            </div>
+            <br>
+            <div class="form-row">
+                <small>Tus cambios se verán reflejados al siguiente día para no afectar a las plantas</small>
+                <div class="col-md-5 offset-md-7  col-sm-5">
+                    <button type="submit" class="btn btn-primary" onclick="enviar()">Guardar</button>
+                </div>
+            </div>
+        </form>
+        <div id="alertas">
+
+        </div>
+    </div>
     <script src="js/jquery.slim.js"></script>
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script>
-        const lol = (x)=>{
-            x.classList.toggle('burger');
-        };
+    const lol = (x)=>{
+        x.classList.toggle('burger');
+    };
+    const enviar = ()=>{
+        const tiempo = parseInt(document.getElementById('validaTiempo').value);
+        const tipo = document.getElementById('validaTipo').value;
+        const tiempoF = parseInt(document.getElementById('validaTiempoF').value);
+        const tipoF = document.getElementById('validaTipoF').value;
+        const tMin = parseInt(document.getElementById('validaMinT').value);
+        const tMax = parseInt(document.getElementById('validaMaxT').value);
+        const hMin = parseInt(document.getElementById('validaMinH').value);
+        const hMax = parseInt(document.getElementById('validaMaxH').value);
+        if(tiempo < 0 || tiempoF < 0){
+            let elemento = `<div class=\"alert alert-danger\" role=\"alert\">Ingresa un numero valido</div>`;
+            document.getElementById('alertas').innerHTML += elemento;
+            lo();
+            return;
+        }else{
+            if(tipo === "M" || tipo === "S" || tipoF === "M" || tipoF === "S"){
+                if(tiempo > 60 || tiempoF > 60){
+                    let elemento = `<div class=\"alert alert-danger\" role=\"alert\">Ingresa un numero valido</div>`;
+                    document.getElementById('alertas').innerHTML += elemento;
+                    lo();
+                    return;
+                }
+            }else if(tipo === "H" || tipoF === "H"){
+                if(tiempo > 24 || tiempoF > 24){
+                    let elemento = `<div class=\"alert alert-danger\" role=\"alert\">Ingresa un numero valido</div>`;
+                    document.getElementById('alertas').innerHTML += elemento;
+                    lo();
+                    return;
+                }
+            }
+        }
+        if(tMin >= tMax){
+            let elemento = `<div class=\"alert alert-danger\" role=\"alert\">Verifique temperaturas</div>`;
+            document.getElementById('alertas').innerHTML += elemento;
+            lo();
+            return;
+        }
+        if(hMin >= hMax){
+            let elemento = `<div class=\"alert alert-danger\" role=\"alert\">Verifique humedad</div>`;
+            document.getElementById('alertas').innerHTML += elemento;
+            lo();
+            return;
+        }
+        const obj = `tiempoRiego=${tiempo}&intervaloR=${tipo}&tiempoFoco=${tiempoF}&intervaloF=${tipoF}&temperaturaMinima=${tMin}&temperaturaMaxima=${tMax}&humedadMinima=${hMin}&humedadMaxima=${hMax}`;
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", '/configuracion', true);
+
+        //Send the proper header information along with the request
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.send(obj);
+
+        let elemento = `<div class=\"alert alert-danger\" role=\"alert\">Cambios guardados, tomarán efecto al siguiente dia</div>`;
+        document.getElementById('alertas').innerHTML += elemento;
+        lo();
+    };
+    const lo = ()=>{
+        setTimeout(function() {
+            $(".alert").alert('close');
+        }, 2000);
+    };
     </script>
 </body>
 </html>
