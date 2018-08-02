@@ -5,16 +5,16 @@
 #define DHTPIN 7
 #define DHTTYPE DHT11
 
-const byte BOTON_CALEFACCION = 20;
-const byte BOTON_GOTEO = 21;
-const byte BOTON_FOCO = 22;
-const byte BOTON_RIEGO = 23;
+const byte BOTON_CALEFACCION = 2;
+const byte BOTON_GOTEO = 3;
+const byte BOTON_FOCO = 4;
+const byte BOTON_RIEGO = 5;
 const byte BOTON_INICIO = 24;
 
-const byte RELAY_CALEFACCION = 6;
-const byte RELAY_GOTEO = 5;
-const byte RELAY_FOCO = 4;
-const byte RELAY_RIEGO = 3;
+const byte RELAY_CALEFACCION = 8;
+const byte RELAY_GOTEO = 9;
+const byte RELAY_FOCO = 10;
+const byte RELAY_RIEGO = 11;
 
 const byte RS = 22;
 const byte ENABLE = 24;
@@ -26,9 +26,9 @@ const byte D7 = 36;
 const unsigned long DIA = 86400000;
 const unsigned long PRESIONADO = 200;
 
-const String TEMPERATURA = String("Temp: ");
-const String CENTIGRADOS = String("C");
-const String HUMEDAD = String("Hum: ");
+const String TEMPERATURA = String("T: ");
+const String CENTIGRADOS = String("C - ");
+const String HUMEDAD = String("H: ");
 const String PORCENTAJE = String("%");
 
 
@@ -84,7 +84,7 @@ void setup() {
   pinMode(BOTON_FOCO, INPUT);
   pinMode(BOTON_RIEGO, INPUT);
   pinMode(BOTON_INICIO, INPUT);
-  
+
   pinMode(RELAY_CALEFACCION, OUTPUT);
   pinMode(RELAY_GOTEO, OUTPUT);
   pinMode(RELAY_FOCO, OUTPUT);
@@ -105,14 +105,11 @@ void loop() {
       // Hubo un error al tomar la lectura, problema del sensor
       Serial.println("ERROR AL LEER DEL SENSOR, POR FAVOR, VERIFIQUE");
     }
-    lcd.setCursor(0,0);
-    lcd.print(TEMPERATURA + String(temperaturaActual) + " " + HUMEDAD + String(humedadActual));
-    printData();
-    
+    printData(tiempo);
+    checkButtons(tiempo);
     checaTemperaturaHumedad();
     riego(tiempo);
     foco(tiempo);
-    //checkButtons(tiempo);
     serialEvents(tiempo);
     reset(tiempo);
   } else {
@@ -123,13 +120,18 @@ void loop() {
   }
 }
 
-void printData() {
+void printData(unsigned long tiempo) {
   Serial.println("TEMPERATURA " + String(temperaturaActual) + " " + String(TEMPERATURA_MINIMA) + " " + String(TEMPERATURA_MAXIMA));
   Serial.println("HUMEDAD " + String(humedadActual) + " " + String(HUMEDAD_MINIMA) + " " + String(HUMEDAD_MAXIMA));
   Serial.println("GOTEO " + String(estadoGoteo));
   Serial.println("CALEFACCION " + String(estadoCalefaccion));
   Serial.println("RIEGO " + String(estadoRiego));
   Serial.println("FOCO " + String(estadoFoco));
+  if (tiempo - TIEMPO_DISPLAY_ACTUAL >=  TIEMPO_DISPLAY_ESPERA) {
+     TIEMPO_DISPLAY_ACTUAL =  tiempo;
+     lcd.setCursor(0,0);
+     lcd.print(TEMPERATURA + String(temperaturaActual) + CENTIGRADOS + HUMEDAD + String(humedadActual) + PORCENTAJE);
+  }
 }
 
 void checaTemperaturaHumedad() {
@@ -137,10 +139,12 @@ void checaTemperaturaHumedad() {
     // Se enciende calefacción
     estadoGoteo = false;
     estadoCalefaccion = true;
+    lcd.print("CALEFACCION ENCENDIDA");
   } else if (temperaturaActual >= TEMPERATURA_MAXIMA || humedadActual < HUMEDAD_MINIMA) {
     // Apaga la calefacción y enciende el Goteo
     estadoCalefaccion = false;
     estadoGoteo = true;
+    lcd.print("GOTEO ENCENDIDO");
   } else {
     estadoCalefaccion = false;
     estadoGoteo = false;
@@ -152,16 +156,18 @@ void checaTemperaturaHumedad() {
 void riego(unsigned long tiempo) {
   // SI ESTÁ PRENDIDO EL RIEGO
   if (estadoRiego) {
+    digitalWrite(RELAY_RIEGO, LOW);
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ACTIVO) {
       estadoRiego = false;
       tiempoRiegoActual = tiempo;
-      digitalWrite(RELAY_RIEGO, HIGH);
+      lcd.print("RIEGO APAGADO");
     }
   } else {
+    digitalWrite(RELAY_RIEGO, HIGH);
     if (tiempo - tiempoRiegoActual >= TIEMPO_RIEGO_ESPERA) {
       estadoRiego = true;
       tiempoRiegoActual = tiempo;
-      digitalWrite(RELAY_RIEGO, LOW);
+      lcd.print("RIEGO ENCENDIDO");
     }
   }
 }
@@ -169,16 +175,18 @@ void riego(unsigned long tiempo) {
 void foco(unsigned long tiempo) {
   // SI ESTÁ PRENDIDO O APAGADO EL FOCO
   if (estadoFoco) {
+    digitalWrite(RELAY_FOCO, LOW);
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ACTIVO) {
       estadoFoco = false;
       tiempoFocoActual = tiempo;
-      digitalWrite(RELAY_FOCO, HIGH);
+      lcd.print("FOCO APAGADO");
     }
   } else {
+    digitalWrite(RELAY_FOCO, HIGH);
     if (tiempo - tiempoFocoActual >= TIEMPO_FOCO_ESPERA) {
       estadoFoco = true;
       tiempoFocoActual = tiempo;
-      digitalWrite(RELAY_FOCO, LOW);
+      lcd.print("FOCO PRENDIDO");
     }
   }
 }
